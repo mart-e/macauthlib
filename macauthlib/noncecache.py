@@ -160,7 +160,7 @@ class Cache(object):
                         self._purge_item()
                 # Purge a few expired items to make room.
                 # Don't purge *all* of them, so we don't pause for too long.
-                for _ in xrange(5):
+                for _ in range(5):
                     (old_timestamp, old_key) = self.purge_queue[0]
                     if old_timestamp >= purge_deadline:
                         break
