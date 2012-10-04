@@ -33,13 +33,19 @@ __version__ = "%d.%d.%d%s" % __ver_tuple__
 
 
 import os
+import sys
 import time
 import hmac
 from hashlib import sha1
 from base64 import b64encode
+from binascii import hexlify
 
 from macauthlib import utils
 from macauthlib.noncecache import NonceCache
+
+if sys.version_info > (3,):
+    unicode = str
+
 
 # Global NonceCache instance used when a specific cache is not specified.
 DEFAULT_NONCE_CACHE = None
@@ -64,7 +70,7 @@ def sign_request(request, id, key, hashmod=None, params=None):
     if "ts" not in params:
         params["ts"] = str(int(time.time()))
     if "nonce" not in params:
-        params["nonce"] = os.urandom(5).encode("hex")
+        params["nonce"] = hexlify(os.urandom(5))
     # Calculate the signature and add it to the parameters.
     params["mac"] = get_signature(request, key, hashmod, params)
     # Serialize the parameters back into the authz header.
@@ -105,6 +111,8 @@ def get_signature(request, key, hashmod=None, params=None):
     if hashmod is None:
         hashmod = sha1
     sigstr = utils.get_normalized_request_string(request, params)
+    if isinstance(key, unicode):
+        key = key.encode("latin1")
     return b64encode(hmac.new(key, sigstr, hashmod).digest())
 
 

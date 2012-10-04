@@ -7,6 +7,7 @@ Low-level utility functions for macauthlib.
 
 """
 
+import sys
 import re
 import functools
 
@@ -18,6 +19,18 @@ try:
 except ImportError:   # pragma nocover
     pass              # pragma nocover
 
+
+if sys.version_info > (3,):
+
+    def iteritems(d):
+        """Py3 compatability function for iterating over dict items."""
+        return d.items()
+
+else:
+
+    def iteritems(d):
+        """Py2 compatability function for iterating over dict items."""
+        return d.iteritems()
 
 # Regular expression matching a single param in the HTTP_AUTHORIZATION header.
 # This is basically <name>=<value> where <value> can be an unquoted token,
@@ -126,7 +139,10 @@ def get_normalized_request_string(request, params=None):
     bits.append(port)
     bits.append(params.get("ext", ""))
     bits.append("")     # to get the trailing newline
-    return "\n".join(bits)
+    if sys.version_info > (3,):
+        bits = [b if isinstance(b, bytes) else b.encode("latin1")
+                for b in bits] 
+    return b"\n".join(bits)
 
 
 def strings_differ(string1, string2):
@@ -176,12 +192,12 @@ def normalize_request_object(func):
             # Copy over only the details needed for the signature.
             request = webob.Request.blank(orig_request.full_url)
             request.method = orig_request.method
-            request.headers.update(orig_request.headers.iteritems())
+            request.headers.update(iteritems(orig_request.headers))
         # A WSGI environ dict?
         elif isinstance(orig_request, dict):
             request = webob.Request(orig_request)
         # A bytestring?
-        elif isinstance(orig_request, str):
+        elif isinstance(orig_request, bytes):
             request = webob.Request.from_bytes(orig_request)
         # A file-like object?
         elif all(hasattr(orig_request, attr) for attr in ("read", "readline")):

@@ -12,6 +12,8 @@ import heapq
 import threading
 import collections
 
+from macauthlib.utils import iteritems
+
 
 DEFAULT_NONCE_TTL = 30  # thirty seconds
 DEFAULT_ID_TTL = 3600   # one hour
@@ -78,7 +80,7 @@ class NonceCache(object):
             # Insertion could race if multiple requests come in for an id.
             try:
                 self._ids.set(id, (skew, nonces))
-            except KeyExistsError, exc:     # pragma nocover
+            except KeyExistsError as exc:     # pragma nocover
                 (skew, nonces) = exc.value  # pragma nocover
         # If the adjusted timestamp is too old or too new, then
         # we can reject it without even looking at the nonce.
@@ -119,7 +121,7 @@ class Cache(object):
 
     def __iter__(self):
         now = time.time()
-        for key, item in self.items.iteritems():
+        for key, item in iteritems(self.items):
             if item.timestamp + self.ttl >= now:
                 yield key
 
