@@ -113,7 +113,7 @@ def get_signature(request, key, hashmod=None, params=None):
     sigstr = utils.get_normalized_request_string(request, params)
     if isinstance(key, unicode):
         key = key.encode("latin1")
-    return b64encode(hmac.new(key, sigstr, hashmod).digest())
+    return b64encode(hmac.new(key, sigstr, hashmod).digest()).decode()
 
 
 @utils.normalize_request_object
